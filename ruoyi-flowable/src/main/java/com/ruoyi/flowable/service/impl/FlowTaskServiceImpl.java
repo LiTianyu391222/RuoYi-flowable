@@ -840,6 +840,7 @@ public class FlowTaskServiceImpl extends FlowServiceFactory implements IFlowTask
                                 SysUser sysUser = sysUserService.selectUserById(Long.parseLong(identityLink.getUserId()));
                                 stringBuilder.append(sysUser.getNickName()).append(",");
                             }
+
                         }
                     }
                     if (StringUtils.isNotBlank(stringBuilder)) {
