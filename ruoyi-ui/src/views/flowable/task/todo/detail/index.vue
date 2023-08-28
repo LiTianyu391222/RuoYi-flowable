@@ -25,9 +25,7 @@
               <!--                <el-button  icon="el-icon-edit-outline" type="primary" size="mini" @click="handleDelegate">签收</el-button>-->
               <!--              <el-button icon="el-icon-refresh-left" type="warning" size="mini" @click="handleReturn">退回</el-button>-->
               <!--           <el-button icon="el-icon-circle-close" type="danger" size="mini" @click="handleReject">驳回</el-button>-->
-                           <el-button v-if="!formKeyExist" icon="el-icon-edit-outline" type="danger" size="mini"
-                                                  @click="handleRefuse">拒绝
-                                       </el-button>
+            <el-button v-if="!formKeyExist" icon="el-icon-edit-outline" type="danger" size="mini" @click="handleRefuse">拒绝</el-button>
             </div>
           </el-col>
         </el-tab-pane>
