@@ -18,13 +18,16 @@
             </div>
             <div style="margin-left:15%;margin-bottom: 20px;font-size: 14px;">
               <el-button v-if="!formKeyExist" icon="el-icon-edit-outline" type="success" size="mini"
-                         @click="handleComplete">审批
+                         @click="handleComplete">通过
               </el-button>
               <!--                <el-button  icon="el-icon-edit-outline" type="primary" size="mini" @click="handleDelegate">委派</el-button>-->
               <!--                <el-button  icon="el-icon-edit-outline" type="primary" size="mini" @click="handleAssign">转办</el-button>-->
               <!--                <el-button  icon="el-icon-edit-outline" type="primary" size="mini" @click="handleDelegate">签收</el-button>-->
               <!--              <el-button icon="el-icon-refresh-left" type="warning" size="mini" @click="handleReturn">退回</el-button>-->
-              <!--              <el-button icon="el-icon-circle-close" type="danger" size="mini" @click="handleReject">驳回</el-button>-->
+                         <el-button icon="el-icon-circle-close" type="danger" size="mini" @click="handleReject">驳回</el-button>
+                           <el-button v-if="!formKeyExist" icon="el-icon-edit-outline" type="danger" size="mini"
+                                                  @click="handleRefuse">拒绝
+                                       </el-button>
             </div>
           </el-col>
         </el-tab-pane>
@@ -80,7 +83,7 @@
           <flow :flowData="flowData"/>
         </el-tab-pane>
       </el-tabs>
-      <!--审批任务-->
+      <!--审批任务(同意流程)-->
       <el-dialog :title="completeTitle" :visible.sync="completeOpen" width="60%" append-to-body>
         <el-form ref="taskForm" :model="taskForm">
           <el-form-item prop="targetKey">
@@ -94,9 +97,29 @@
         </el-form>
         <span slot="footer" class="dialog-footer">
           <el-button @click="completeOpen = false">取 消</el-button>
-          <el-button type="primary" @click="taskComplete">确 定</el-button>
+          <el-button type="primary" @click="taskComplete('同意')">确 定</el-button>
         </span>
       </el-dialog>
+       <!--审批任务(拒绝流程)-->
+            <el-dialog :title="refuseTitle" :visible.sync="refuseOpen" width="60%" append-to-body>
+              <el-form ref="taskForm" :model="taskForm">
+                <el-form-item prop="targetKey">
+                  <flow-user v-if="checkSendUser" :checkType="checkType" @handleUserSelect="handleUserSelect"></flow-user>
+                  <flow-role v-if="checkSendRole" @handleRoleSelect="handleRoleSelect"></flow-role>
+                </el-form-item>
+                <el-form-item label="处理意见" label-width="80px" prop="comment"
+                              :rules="[{ required: true, message: '请输入处理意见', trigger: 'blur' }]">
+                  <el-input type="textarea" v-model="taskForm.comment" placeholder="请输入处理意见"/>
+
+                </el-form-item>
+              </el-form>
+              <span slot="footer" class="dialog-footer">
+                <el-button @click="refuseOpen = false">取 消</el-button>
+                <el-button type="primary" @click="taskComplete('不同意')">确 定</el-button>
+              </span>
+            </el-dialog>
+
+
       <!--退回流程-->
       <el-dialog :title="returnTitle" :visible.sync="returnOpen" width="40%" append-to-body>
         <el-form ref="taskForm" :model="taskForm" label-width="80px">
@@ -196,6 +219,7 @@ export default {
         delegateTaskShow: false, // 是否展示回退表单
         defaultTaskShow: true, // 默认处理
         comment: "", // 意见内容
+        sign: "", // 是否同意标识
         procInsId: "", // 流程实例编号
         instanceId: "", // 流程实例编号
         deployId: "",  // 流程定义编号
@@ -212,7 +236,9 @@ export default {
       variablesData: {}, // 流程变量数据
       returnTaskList: [],  // 回退列表数据
       completeTitle: null,
+      refuseTitle: null,
       completeOpen: false,
+      refuseOpen: false,
       returnTitle: null,
       returnOpen: false,
       rejectOpen: false,
@@ -260,6 +286,7 @@ export default {
       }
     },
     setColor(val) {
+    console.log("222============="+val);
       if (val) {
         return "#2bc418";
       } else {
@@ -334,10 +361,19 @@ export default {
     handleComplete() {
       // this.completeOpen = true;
       // this.completeTitle = "流程审批";
-      this.submitForm(null);
+      var sign = "同意";
+      this.submitForm(null,sign);
+    },
+    /** 加载审批任务弹框 */
+    handleRefuse() {
+    // this.completeOpen = true;
+    // this.completeTitle = "流程审批";
+    var sign =  "不同意";;
+    this.submitForm(null,sign);
     },
     /** 用户审批任务 */
-    taskComplete() {
+    taskComplete(sign) {
+    this.taskForm.sign = sign;
       if (!this.taskForm.variables && this.checkSendUser) {
         this.$modal.msgError("请选择流程接收人员!");
         return;
@@ -443,14 +479,15 @@ export default {
       this.returnTaskList = [];
     },
     /** 申请流程表单数据提交 */
-    submitForm(formData) {
-      // 根据当前任务或者流程设计配置的下一步节点 todo 暂时未涉及到考虑网关、表达式和多节点情况
-      const params = {taskId: this.taskForm.taskId}
+    submitForm(formData,sign) {
+      // 根据当前任务或者流程设计配置的下一步节点
+      const params = {taskId: this.taskForm.taskId,sign:sign}
       getNextFlowNode(params).then(res => {
         const data = res.data;
         this.taskForm.formData = formData;
+
         if (data) {
-          if (data.dataType === 'dynamic') {
+          if (data.dataType === 'dynamic' ) {
             if (data.type === 'assignee') { // 指定人员
               this.checkSendUser = true;
               this.checkType = "single";
@@ -467,8 +504,20 @@ export default {
             }
           }
         }
-        this.completeOpen = true;
-        this.completeTitle = "流程审批";
+        console.log("sign====================="+sign);
+        if(sign == '同意'){
+        console.log("执行同意逻辑==============================")
+          this.completeOpen = true;
+          this.completeTitle = "流程审批";
+          this.refuseOpen = false;
+        }else{
+        console.log("执行不同意逻辑==========================")
+         this.checkSendUser = false;
+          this.checkType = "single";
+         this.completeOpen = false;
+          this.refuseOpen = true;
+          this.refuseTitle = "流程审批";
+        }
       })
     },
   },

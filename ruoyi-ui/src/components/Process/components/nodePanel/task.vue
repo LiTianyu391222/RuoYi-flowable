@@ -358,6 +358,11 @@ export default {
   },
   watch: {
     'formData.userType': function(val, oldVal) {
+      //修复前端流程设计时，审批人员类型切换问题
+      if(val !== 'candidateGroups'){
+            delete this.element.businessObject.candidateGroups;
+        }
+
       if (StrUtil.isNotBlank(oldVal)) {
           delete this.element.businessObject.$attrs[`flowable:${oldVal}`]
           delete this.formData[oldVal]
