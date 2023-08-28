@@ -53,4 +53,7 @@ public class FlowTaskVo {
 
     @ApiModelProperty("审批组")
     private List<String> candidateGroups;
+
+    @ApiModelProperty("审批标识")
+    private String sign ;
 }

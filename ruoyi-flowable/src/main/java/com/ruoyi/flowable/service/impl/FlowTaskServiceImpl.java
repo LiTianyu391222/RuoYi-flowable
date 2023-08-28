@@ -103,10 +103,13 @@ public class FlowTaskServiceImpl extends FlowServiceFactory implements IFlowTask
             taskService.addComment(taskVo.getTaskId(), taskVo.getInstanceId(), FlowComment.DELEGATE.getType(), taskVo.getComment());
             taskService.resolveTask(taskVo.getTaskId(), taskVo.getVariables());
         } else {
+            String sign = taskVo.getSign();
+            Map<String, Object> variables = taskVo.getVariables();
+            variables.put("outcome",sign);
             taskService.addComment(taskVo.getTaskId(), taskVo.getInstanceId(), FlowComment.NORMAL.getType(), taskVo.getComment());
             Long userId = SecurityUtils.getLoginUser().getUser().getUserId();
             taskService.setAssignee(taskVo.getTaskId(), userId.toString());
-            taskService.complete(taskVo.getTaskId(), taskVo.getVariables());
+            taskService.complete(taskVo.getTaskId(), variables);
         }
         return AjaxResult.success();
     }
@@ -691,17 +694,16 @@ public class FlowTaskServiceImpl extends FlowServiceFactory implements IFlowTask
         Page<FlowTaskDto> page = new Page<>();
         // 只查看自己的数据
         SysUser sysUser = SecurityUtils.getLoginUser().getUser();
+
+        //修复ruoyi-flowable中  配置动态审批人的时候 查询不到待办的问题
+        Collection<String> userIds = new ArrayList<>();
+        userIds.add(sysUser.getUserId().toString());
         TaskQuery taskQuery = taskService.createTaskQuery()
                 .active()
                 .includeProcessVariables()
-                .taskCandidateGroupIn(sysUser.getRoles().stream().map(role -> role.getRoleId().toString()).collect(Collectors.toList()))
+                .taskCandidateGroupIn(userIds)
                 .taskCandidateOrAssigned(sysUser.getUserId().toString())
                 .orderByTaskCreateTime().desc();
-
-//        TODO 传入名称查询不到数据?
-//        if (StringUtils.isNotBlank(queryVo.getName())){
-//            taskQuery.processDefinitionNameLike(queryVo.getName());
-//        }
         page.setTotal(taskQuery.count());
         List<Task> taskList = taskQuery.listPage(queryVo.getPageSize() * (queryVo.getPageNum() - 1), queryVo.getPageSize());
         List<FlowTaskDto> flowList = new ArrayList<>();
