@@ -1032,6 +1032,9 @@ public class FlowTaskServiceImpl extends FlowServiceFactory implements IFlowTask
         if (Objects.nonNull(task)) {
             // Step 2. 获取当前流程所有流程变量(网关节点时需要校验表达式)
             Map<String, Object> variables = taskService.getVariables(task.getId());
+            //新增审核审核是否通过标识
+            String sign = flowTaskVo.getSign();
+            variables.put("outcome",sign);
             List<UserTask> nextUserTask = FindNextNodeUtil.getNextUserTasks(repositoryService, task, variables);
             if (CollectionUtils.isNotEmpty(nextUserTask)) {
                 for (UserTask userTask : nextUserTask) {
