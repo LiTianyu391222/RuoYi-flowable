@@ -818,23 +818,6 @@ public class FlowTaskServiceImpl extends FlowServiceFactory implements IFlowTask
                     .desc().list();
             List<FlowTaskDto> hisFlowList = new ArrayList<>();
             for (HistoricActivityInstance histIns : list) {
-                // 展示开始节点
-//                if ("startEvent".equals(histIns.getActivityType())) {
-//                    FlowTaskDto flowTask = new FlowTaskDto();
-//                    // 流程发起人信息
-//                    HistoricProcessInstance historicProcessInstance = historyService.createHistoricProcessInstanceQuery()
-//                            .processInstanceId(histIns.getProcessInstanceId())
-//                            .singleResult();
-//                    SysUser startUser = sysUserService.selectUserById(Long.parseLong(historicProcessInstance.getStartUserId()));
-//                    flowTask.setTaskName(startUser.getNickName() + "(" + startUser.getDept().getDeptName() + ")发起申请");
-//                    flowTask.setFinishTime(histIns.getEndTime());
-//                    hisFlowList.add(flowTask);
-//                } else if ("endEvent".equals(histIns.getActivityType())) {
-//                    FlowTaskDto flowTask = new FlowTaskDto();
-//                    flowTask.setTaskName(StringUtils.isNotBlank(histIns.getActivityName()) ? histIns.getActivityName() : "结束");
-//                    flowTask.setFinishTime(histIns.getEndTime());
-//                    hisFlowList.add(flowTask);
-//                } else
                 if (StringUtils.isNotBlank(histIns.getTaskId())) {
                     FlowTaskDto flowTask = new FlowTaskDto();
                     flowTask.setTaskId(histIns.getTaskId());
@@ -856,10 +839,6 @@ public class FlowTaskServiceImpl extends FlowServiceFactory implements IFlowTask
                             if (StringUtils.isNotBlank(identityLink.getUserId())) {
                                 SysUser sysUser = sysUserService.selectUserById(Long.parseLong(identityLink.getUserId()));
                                 stringBuilder.append(sysUser.getNickName()).append(",");
-                            }
-                            if (StringUtils.isNotBlank(identityLink.getGroupId())) {
-                                SysRole sysRole = sysRoleService.selectRoleById(Long.parseLong(identityLink.getGroupId()));
-                                stringBuilder.append(sysRole.getRoleName()).append(",");
                             }
                         }
                     }
